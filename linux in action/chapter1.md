@@ -185,3 +185,166 @@ chapter1.md  pic
 img.png
 ```
 
+<div dir="rtl" style="font-size:18px">
+2.pwd: این دستور آدرس محلی که اکنون در آن قرار داریم را نمایش میدهد
+</div>
+
+```commandline
+pwd
+/home/mehran/Desktop/myproject/design pattern
+
+```
+
+<div dir="rtl" style="font-size:18px">
+3.cd: برای تغییر مسیر استفاده میشود
+</div>
+
+```commandline
+cd /
+```
+
+<div dir="rtl" style="font-size:18px">
+با دستور بالا به سمت ادرس روت میرود
+
+4.cat: با این دستور میتوانیم محتویات فایل رو بخونیم بدون اینکه تغییراتی به اون بدیم
+
+</div>
+
+```commandline
+cat /etc/resolv.conf 
+# This is /run/systemd/resolve/stub-resolv.conf managed by man:systemd-resolved(8).
+# Do not edit.
+#
+# This file might be symlinked as /etc/resolv.conf. If you're looking at
+# /etc/resolv.conf and seeing this text, you have followed the symlink.
+#
+# This is a dynamic resolv.conf file for connecting local clients to the
+# internal DNS stub resolver of systemd-resolved. This file lists all
+# configured search domains.
+#
+# Run "resolvectl status" to see details about the uplink DNS servers
+# currently in use.
+#
+# Third party programs should typically not access this file directly, but only
+# through the symlink at /etc/resolv.conf. To manage man:resolv.conf(5) in a
+# different way, replace this symlink by a static file or a different symlink.
+#
+# See man:systemd-resolved.service(8) for details about the supported modes of
+# operation for /etc/resolv.conf.
+
+nameserver 127.0.0.91
+options edns0 trust-ad
+search .
+
+```
+
+<div dir="rtl" style="font-size:18px">
+5.less,more:  همون برای خواندن فایل مثل دستور قبلی ولی قابلیت اسکرول کردن رو داره و تمام متن و همرو نمیاره میتونیم اسکرول کنیم که با اشاره گر 
+ها به سمت بالاو پایین حرکت میکنه و با q خارج میشه
+</div>
+
+<div dir="rtl" style="font-size:20px; color:orange">
+۱.۲.۳ - دستورات مدیریت فایل:
+
+1.touch:
+میتوانیم خیلی سریع یک فایل خالی رو بسازیم
+</div>
+
+```commandline
+touch my_file
+
+ls
+'design pattern'  'linux in action'   my_file   venv
+
+```
+
+<div dir="rtl" style="font-size:18px">
+برای ویرایش فایل میتونیم از یک ادیتور استفاده کنیم اما گاهی اوقات لازم میشه که تو همون ترمینال اقدام به ویرایش فایل کنیم ابزارهای nano,vim برای این کار مناسب هستند
+
+2.stat:
+میتونیم اطلاعات بیشتری از پوشه یا فایل موجود به دست بیاریم
+</div>
+
+```commandline
+stat my_file
+  File: my_file
+  Size: 0               Blocks: 0          IO Block: 4096   regular empty file
+Device: 802h/2050d      Inode: 47976728    Links: 1
+Access: (0664/-rw-rw-r--)  Uid: ( 1000/  mehran)   Gid: ( 1000/  mehran)
+Access: 2022-07-04 22:00:34.929059642 +0430
+Modify: 2022-07-04 22:00:34.929059642 +0430
+Change: 2022-07-04 22:00:34.929059642 +0430
+ Birth: 2022-07-04 22:00:34.929059642 +0430
+
+```
+
+<div dir="rtl" style="font-size:18px">
+3.mkdir:
+
+دستوری برای ساخت پوشه
+
+4.cd ..
+
+به پوشه قبلی برمیگردد
+
+5.rmdir:
+
+حذف پوشه میتونیم به چای این دستور از دستور دیگری استفاده کنیم:
+rm -r  
+باعث حذف فایل یا پوشه میشود
+
+6.cp:
+
+این دستور فایل یا پوشه را در مکان دیگری کپی میکند
+</div>
+
+```commandline
+cp file1 folder
+
+ls folder
+file1
+```
+
+<div dir="rtl" style="font-size:18px">
+7.mv:
+
+این دستور فایل یا پوشه را به محل دیگری cut میکند
+</div>
+
+```commandline
+ mv file2 folder
+
+ls
+'design pattern'   file1   file3   folder  'linux in action'   venv
+
+ls folder
+file1  file2
+```
+
+<div dir="rtl" style="font-size:18px">
+میتوانیم از کاراکتر ? نیز استفاده کنیم. این کاراکتر میگه که فقط یک کاراکتر میتونه بعد اون کلمه بیادمثالا:
+</div>
+
+```commandline
+mv file? folder
+```
+
+<div dir="rtl" style="font-size:18px">
+این باعث میشه که هرچی فایل که با file شروع میشه و یک کاراکتر اضافه داره به پوشه folder منتقل بشه
+</div>
+
+<div dir="rtl" style="font-size:18px; color:orange">
+۱.۲.۴ - ترفند های کیبرد:
+</div>
+
+<div dir="rtl" style="font-size:18px">
+برای کپی و پیست کردن در ترمینال از کلید میانبر ctrl+shift+c و ctrl+shift+v استفاده میکنیم
+
+با استفاده از کلید tab میتونیم اسم و نام فایل و پوشه که در ترمینال مینویسیم رو کامل کنیم
+</div>
+
+```commandline
+sudo cp foo-matic-plus_0.9.1-3_amd64.deb /usr/bin/foo-matic/
+```
+
+
