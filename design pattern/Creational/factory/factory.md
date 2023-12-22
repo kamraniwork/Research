@@ -11,43 +11,81 @@
 اگر بخواهیم به تعداد بی شماری شی از یک کلاس بسازیم و نمیدانیم چه تعداد شی قرار است ساخته شود
 </div>
 
+
+<div dir="rtl" style="font-size:30px; color:yellow">
+یک مثال از دنیای واقعی:
+</div>
+
+<div dir="rtl" style="font-size:18px">
+یک مدیر رو فرض کنید که وظیفه استخدام افراد رو به عهده داره. مطمئنن براش غیر ممکنه که مصاحبه با همه افراد در پوزیشن‌های مختلف شرکت رو خودش انجام بده! پس میاد با توجه به پوزیشن تصمیم میگیره که مسئولیت مصاحبه رو به عهده یکی از کارمند‌هاش بزاره.
+</div>
+
 <div dir="rtl" style="font-size:30px; color:yellow">
 پیاده سازی: 
 </div>
 
-```python
-from abc import ABCMeta, abstractmethod
+<div dir="rtl" style="font-size:18px">
+پس اول یک اینترفیس برای مصاحبه کننده‌ها میسازیم و چند پیاده‌سازی هم برای اون ایجاد می‌کنیم:
+</div>
 
-class Person(metaclass=ABCMeta):
-    @abstractmethod
-    def create(self, name):
+```python
+class Interviewer:
+    def askQuestions(self):
         pass
 
 
-class HR(Person):
-    def create(self, name):
-        print(f"HR {name} is created")
+class Developer(Interviewer):
+    def askQuestions(self):
+        print
+        'Asking about design patterns'
 
 
-class Engineer(Person):
-    def create(self, name):
-        print(f"Engineer {name} is created")
+class CommunityExecutive(Interviewer):
+    def askQuestions(self):
+        print('Asking about community building')
+```
+
+<div dir="rtl" style="font-size:18px">
+خب حالا HiringManager رو میسازیم:
+</div>
+
+```python
+class HiringManager:
+    def makeInterviewer(self):
+        pass
+
+    def takeInterview(self):
+        interviewer = self.makeInterviewer()
+        interviewer.askQuestions()
+```
+
+<div dir="rtl" style="font-size:18px">
+در نهایت هر فرزند میتونه ازش ارث بری کنه و متد makeInterviewer خودش رو داشته باشه:
+</div>
+
+```python
+class DevelopmentManager(HiringManager):
+    def makeInterviewer(self):
+        return Developer()
 
 
-class PersonFactory(object):
-    @classmethod
-    def create_person(cls, designation, name):
-        eval(designation)().create(name)
+class MarketingManager(HiringManager):
+    def makeInterviewer(self):
+        return CommunityExecutive()
+```
 
+<div dir="rtl" style="font-size:18px">
+و برای استفاده ازش به این صورت عمل می کنیم:
+</div>
 
-if __name__ == "__main__":
-    designation = input("Please enter the designation - ")
-    name = input("Please enter the person name - ")
-    PersonFactory.create_person(designation, name)
+```python
+devManager = DevelopmentManager()
+devManager.takeInterview()
 
-
+marketingManager = MarketingManager()
+marketingManager.takeInterview()
 ```
 
 <div dir="rtl" style="font-size:20px;">
-در کد بالا دو کلاس مختلف از Person را داریم که میخواهیم از هرکدام از آن ها در حین اجرای برنامه هر موقع که خواستیم یک شی بسازیم. و نمیخواهیم از if-else استفاده کنیم که باعث پیچیدگی بیشتر برنامه میشود و وظیفه ایجاد شی به عهده کلاس PersonFactoryاست
+اساساً زمانی ازین الگو استفاده میشه که چندین کلاس با ریشه مشترک داریم (یعنی چندین کلاس یک کلاس parent رو پیاده‌سازی می‌کنند) و با توجه به شرایط تصمیم میگیریم از یکی از اون‌ها استفاده کنیم.
 </div>

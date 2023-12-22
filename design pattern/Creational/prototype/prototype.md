@@ -1,3 +1,7 @@
+<div dir="rtl" style="font-size:40px; color:yellow">
+الگوی طراحی Prototype
+</div>
+
 <div dir="rtl" style="font-size:18px">
 یکی از زیرشاخه های الگوهای طراحی، Creational Design Patterns است.
 این الگو راهی جهت ساخت و ایجاد اشیاء (object) از کلاس ها را ارائه میدهد.
@@ -10,56 +14,71 @@
 
 از این الگو زمانی استفاده می‌کنیم که می‌خوایم یک Clone (کپی) از یک نمونه داشته باشیم. اما ساختن نمونه با کلمه کلیدی new هزینه‌های زیادی داره
 
-به عنوان مثال:
+</div>
+
+<div dir="rtl" style="font-size:30px; color:yellow">
+به زبون ساده:
+</div>
+
+<div dir="rtl" style="font-size:18px">
+مشکل از اینجا شروع میشه که یک ابجکت دارید و نیاز دارید از اون یک کپی ایجاد کنین. چطوری این کار رو میکنین؟ اول باید یک ابجکت جدید از همون کلاس ایجاد کنین بعد باید مقادیر ابجکت اصلی رو در ابجکت جدید کپی کنید. حالا از همین پروسه طاقت فرسا که بگذریم، این مشکل وجود داره این هست که به متغیر‌های خصوصی دسترسی ندارید.دیزاین پترن Prototype میگه یک Interface مشترک داشته باشید که وظیفه‌ش ساخت یک ابجکت کپی از روی ابجکت فعلی باشه.
+</div>
+
+<div dir="rtl" style="font-size:30px; color:yellow">
+مثال برنامه نویسی
+</div>
+
+<div dir="rtl" style="font-size:18px">
+فرض کنید کلاس SomeComponent به این صورت تعریف شده:
 </div>
 
 ```python
-class Book:
-    def __init__(self, title, price):
-        self.title = title
-        self.price = price
-        self.contant = self.fetch_content_from_db()
+class SomeComponent:
+    def __init__(self, some_int, some_list_of_objects, some_circular_ref):
+        self.some_int = some_int
+        self.some_list_of_objects = some_list_of_objects
+        self.some_circular_ref = some_circular_ref
+```
+
+<div dir="rtl" style="font-size:18px">
+پایتون magic method‌هایی برای این مساله در نظر گرفته که ماهم از همون دو تابع معروف copy و deep copy استفاده میکنیم:
+</div>
+
+```python
+import copy
+
+class SomeComponent:
+    def __init__(self, some_int, some_list_of_objects, some_circular_ref):
+        self.some_int = some_int
+        self.some_list_of_objects = some_list_of_objects
+        self.some_circular_ref = some_circular_ref
     
-    def fetch_content_from_db(self):
-        # contant = Book.objects.get(title=self.title).contant
-        contant = "The book contatnt"
-        return contant
+    def __copy__(self):
+        some_list_of_objects = copy.copy(self.some_list_of_objects)
+        some_circular_ref = copy.copy(self.some_circular_ref)
+        new = self.__class__(
+            self.some_int, some_list_of_objects, some_circular_ref
+        )
+        new.__dict__.update(self.__dict__)
+        return new
+
+    def __deepcopy__(self, memo={}):
+        some_list_of_objects = copy.deepcopy(self.some_list_of_objects, memo)
+        some_circular_ref = copy.deepcopy(self.some_circular_ref, memo)
+        new = self.__class__(
+            self.some_int, some_list_of_objects, some_circular_ref
+        )
+        new.__dict__ = copy.deepcopy(self.__dict__, memo)
+    
+        return new
 ```
 
-<div dir="rtl" style="font-size:18px">
-همانطور که در کد بالا مشاهده میکنید متغیر contant شامل متن کتاب و عکس ها است و یک کتاب حداقل ۴۰۰ صفحه دارد 
-
-پس هر بار که ما شی از ** همون کتاب **ایجاد میکنیم تمام این مراحل انجام میشه و بار زیادی به دیتابیس وارد میکنه
-راه حلی وجود داره که وقتی شی جدید ایجاد میشه ما از کد زیر استفاده کنیم:
-
+<div dir="rtl" style="font-size:30px; color:yellow">
+تفاوت Shadow Copy و Deep Copy ؟
 </div>
 
-```python
-class Book:
-    def __init__(self, title, price, contant=None):
-        self.title = title
-        self.price = price
-        self.contant = contant if contant != None else self.fetch_content_from_db()
-
-    def fetch_content_from_db(self):
-        # contant = Book.objects.get(title=self.title).contant
-        contant = "The book contatnt"
-        return contant
-
-    def clone(self):
-        clone_obj = self.contant + '(cached)'
-        return Book(title=self.title, price=self.price, contant=clone_obj)
-
-    def __str__(self):
-        return f"title={self.title}, price={self.price}, contant={self.contant}"
-
-```
-
 <div dir="rtl" style="font-size:18px">
-در کد بالا تغییراتی که دادم اینطور است که یک تابع clone نوشتم که در اون مقدار قبلی متغیر contant ذخیره شده بود و نیازی نبود که دوباره به دیتابیس درخواستی فرستاده شود و تونستم بدون اینکه درخواست سنگین به دیتابیس بدم یک شی از همون کتاب بسازم 
+توی Shadow Copy، یک متغیر ساخته می‌شود و به مکانی توی حافظه، که مقدار متغیر قبلی توش قرار گرفته، اشاره می‌کنه. پس اگر شما مقدار متغیر اول رو تغییر بدین، متغیر دوم هم تغییر می‌کنه. و همین‌طور اگر مقدار متغیر دوم رو تغییر بدین، مقدار متغیر اول هم تغییر می‌کنه.
 
-معایب الگوی Prototype
-
-۱. کپی گرفتن از یک آبجکت پیچیده با پراپرتی‌های زیاد و تو در تو کار دشوار و ظریفی خواهد بود
+ولی توی deep copy، یک متغیر ساخته می‌شه و مقدار متغیر قبلی توی اون کپی می‌شه. در نتیجه تغییر ابجکت اول یا ابجکت کپی تغییری توی اون یکی به وجود نمیاره.
 </div>
-
