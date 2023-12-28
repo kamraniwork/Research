@@ -126,8 +126,9 @@ class Plan:
     def perform_feature(self):
         return self._feature.get_features()
 
-    def add_feature(self, feature: Feature):
-        self._feature.get_features().append(feature)
+    def add_extra_feature(self, feature_name: FeatureName):
+        self._feature.get_features().append(
+            Feature().set_feature_name(feature_name=feature_name).set_plan(plan=0).set_extra_feature())
 
     def get_extra_features_price(self):
         extra_features: List[Feature] = self.get_extra_features_list()
@@ -147,6 +148,12 @@ class Plan:
 
         return extra_features
 
+    def get_total_price(self) -> float:
+        extra_features_price: float = self.get_extra_features_price()
+        plan_price: float = self.perform_price()
+
+        return plan_price + extra_features_price
+
     def __str__(self):
         features_str = ", ".join(map(str, self.perform_feature()))
         return f"Plan with price: {self.perform_price()} and features: {features_str}"
@@ -160,12 +167,54 @@ class Plan0(Plan):
         return "Plan0"
 
 
+class Plan1(Plan):
+    def __init__(self):
+        super().__init__(price=Plan1Price(), feature=FeaturePlan1())
+
+    def __str__(self):
+        return "Plan1"
+
+
+class Plan2(Plan):
+    def __init__(self):
+        super().__init__(price=Plan2Price(), feature=FeaturePlan2())
+
+    def __str__(self):
+        return "Plan2"
+
+
+class Plan3(Plan):
+    def __init__(self):
+        super().__init__(price=Plan3Price(), feature=FeaturePlan3())
+
+    def __str__(self):
+        return "Plan3"
+
+
+class Plan4(Plan):
+    def __init__(self):
+        super().__init__(price=Plan4Price(), feature=FeaturePlan4())
+
+    def __str__(self):
+        return "Plan4"
+
+
+class Plan5(Plan):
+    def __init__(self):
+        super().__init__(price=Plan5Price(), feature=FeaturePlan5())
+
+    def __str__(self):
+        return "Plan5"
+
+
 if __name__ == "__main__":
-    plan = Plan0()
+    plan = Plan2()
     print(plan.perform_price())
     print(plan.perform_feature())
-    plan.add_feature(Feature().set_feature_name(feature_name=FeatureName.S2S).set_plan(plan=0).set_extra_feature())
+    plan.add_extra_feature(feature_name=FeatureName.S2S)
+    plan.add_extra_feature(feature_name=FeatureName.REVENUE)
     print(plan.perform_feature())
     print(plan.get_extra_features_price())
     print(plan.get_extra_features_list())
     print(plan)
+    print(plan.get_total_price())
