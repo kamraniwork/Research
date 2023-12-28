@@ -86,29 +86,27 @@ class FeaturePriceManager:
     }
 
 
-class FeaturePricePlan:
-    def __init__(self, feature_name: str, plan: int, is_extra_feature: bool = False):
-        self.feature_name: str = feature_name
-        self.plan: int = plan
-        self.is_extra_feature: bool = is_extra_feature
+class Feature:
+    def __init__(self):
+        self.is_extra_feature: bool = False
+        self.feature_name: str = str()
+        self.plan: int = 0
 
+    def set_feature_name(self, feature_name: FeatureName) -> "Feature":
+        self.feature_name: str = feature_name.value
+        return self
+
+    def set_plan(self, plan: int) -> "Feature":
+        self.plan: int = plan
+        return self
+
+    def set_extra_feature(self) -> "Feature":
+        self.is_extra_feature: bool = True
+        return self
+
+    def __repr__(self) -> str:
+        return self.feature_name
+
+    @property
     def get_feature_price(self) -> float:
         return FeaturePriceManager.feature_prices[self.feature_name][f"plan{self.plan}"]
-
-
-class FeatureFactory:
-    @staticmethod
-    def create_feature(feature_name: FeatureName, plan: int, is_extra_feature: bool = False) -> "Feature":
-        feature_plan: FeaturePricePlan = FeaturePricePlan(feature_name.value, plan, is_extra_feature=is_extra_feature)
-        return Feature(feature_plan)
-
-
-class Feature:
-    def __init__(self, feature_price: FeaturePricePlan):
-        self.feature_price: FeaturePricePlan = feature_price
-
-    def perform_price(self) -> float:
-        return self.feature_price.get_feature_price()
-
-    def __repr__(self):
-        return self.feature_price.feature_name
