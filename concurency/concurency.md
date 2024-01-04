@@ -1531,3 +1531,372 @@ asyncio.run(main())
 ```
 
 
+<div dir="rtl" style="font-size:30px; color:orangered">
+6.1-Introducing the multiprocessing library
+</div>
+
+
+<div dir="rtl" style="font-size:18px">
+برای وظایف جزئی غیر مرتبط با ورودی/خروجی، با استثناء برخی موارد کوچک، استفاده از چندنخی هیچ فایده‌ای در افزایش عملکرد ارائه نمی‌دهد،
+</div>
+
+```python
+import time
+from multiprocessing import Process
+
+
+def count(count_to: int) -> int:
+    start = time.time()
+    counter = 0
+    while counter < count_to:
+        counter = counter + 1
+    end = time.time()
+    print(f'Finished counting to {count_to} in {end - start}')
+    return counter
+
+
+if __name__ == "__main__":
+    start_time = time.time()
+    to_one_hundred_million = Process(target=count, args=(100000000,))
+    to_two_hundred_million = Process(target=count, args=(200000000,))
+    to_one_hundred_million.start()
+    to_two_hundred_million.start()
+    to_one_hundred_million.join()
+    to_two_hundred_million.join()
+
+    end_time = time.time()
+    print(f'Completed in {end_time - start_time}')
+```
+
+<div dir="rtl" style="font-size:18px">
+کلاس Process دو آرگومان می‌پذیرد: target که نام تابعی است که می‌خواهیم در فرآیند اجرا شود، و args که یک تاپل از آرگومان‌هایی است که می‌خواهیم به تابع منتقل کنیم. سپس متد start را برای هر فرآیند فراخوانی می‌کنیم.  این متد فوراً برمی‌گردد و فرآیند را شروع به اجرا می‌کند. در این مثال هر دو فرآیند را یکی پس از دیگری شروع می‌کنیم. سپس متد join را برای هر فرآیند فراخوانی می‌کنیم. این باعث می‌شود که فرآیند اصلی ما مسدود شود تا هر فرآیند به پایان برسد. بدون اینکه این کار انجام شود، برنامه‌ی ما تقریباً فوراً خاتمه می‌یابد و زیرپروسه‌ها متوقف می‌شوند، چرا که هیچ چیزی برای انتظار اتمام آنها وجود ندارد. 
+</div>
+
+
+<div dir="rtl" style="font-size:30px; color:orangered">
+6.2-Using process pools
+</div>
+
+
+<div dir="rtl" style="font-size:18px">
+وقتی از Process استفاده میکنیم نمیتوانیم به جواب ها دسترسی داشته باشیم و همچنین کیفیت کد هم بسیار پایین میماند. پس اگه از Pool استفاده کنیم مشکل حل میشه:
+</div>
+
+```python
+import time
+from multiprocessing import Pool
+
+
+def count(count_to: int) -> str:
+    start = time.time()
+    counter = 0
+    while counter < count_to:
+        counter = counter + 1
+    end = time.time()
+    print(f'Finished counting to {count_to} in {end - start}')
+    return counter
+
+
+if __name__ == "__main__":
+    time_start = time.time()
+    with Pool() as process_pool:
+        hi_jeff = process_pool.apply(count, args=(100_000_000,))
+        hi_john = process_pool.apply(count, args=(200_000_000,))
+        print(hi_jeff)
+        print(hi_john)
+
+    time_end = time.time() - time_start
+    print(time_end)
+```
+
+<div dir="rtl" style="font-size:18px">
+اما این کد به صورت sync هست ولی در فرایند های مختلف اجرا میشه و خروجی به این صورت هست
+</div>
+
+```
+Finished counting to 100000000 in 3.4728753566741943
+Finished counting to 200000000 in 6.75008487701416
+100000000
+200000000
+10.25699496269226
+```
+
+<div dir="rtl" style="font-size:18px">
+برای اینکه به صورت async اجرا بشه :
+</div>
+
+<div dir="rtl" style="font-size:30px; color:orangered">
+6.2.1-Using asynchronous results
+</div>
+
+
+<div dir="rtl" style="font-size:18px">
+برای async اجرا شدندش باید از تابع async_apply استفاده کنیم:
+
+</div>
+
+```python
+import time
+from multiprocessing import Pool
+
+
+def count(count_to: int) -> str:
+    start = time.time()
+    counter = 0
+    while counter < count_to:
+        counter = counter + 1
+    end = time.time()
+    print(f'Finished counting to {count_to} in {end - start}')
+    return counter
+
+
+if __name__ == "__main__":
+    time_start = time.time()
+    with Pool() as process_pool:
+        hi_jeff = process_pool.apply_async(count, args=(100_000_000,))
+        hi_john = process_pool.apply_async(count, args=(200_000_000,))
+        print(hi_jeff.get())
+        print(hi_john.get())
+
+    time_end = time.time() - time_start
+    print(time_end)
+```
+
+```
+Finished counting to 100000000 in 3.477740526199341
+100000000
+Finished counting to 200000000 in 6.70352578163147
+200000000
+6.7346367835998535
+```
+
+<div dir="rtl" style="font-size:18px">
+که میبینیم که زمان به ۶ ثانیه تغییر پیدا کرد. ولی یک مشکل داره:
+</div>
+
+
+<div dir="rtl" style="font-size:18px">
+اگر از get استفاده کنیم یعنی صبر میکنه تا این فرایند تموم بشه حالا اگه فرایند اول ۱۰ ثانیه طول بکشه و فرایند دوم ۵ ثانیه طول بکشه در اون صورت منتظر میمونه تا فرایند اول تموم شه بعد بیاد چاپ کنه ولی ما میخوایم که اونی که زود تر تموم میشه رو چاپ کنیم. نمیتونیم مدیریت بهتری داشته باشیم.
+</div>
+
+<div dir="rtl" style="font-size:30px; color:orangered">
+6.3.1-Introducing process pool executors
+</div>
+
+
+<div dir="rtl" style="font-size:18px">
+اگر بخواهیم مدیریت بهتری به فرایند ها داشته باشیم باید چه کاری انجام دهیم:
+</div>
+
+```python
+import time
+from concurrent.futures import ProcessPoolExecutor
+
+
+def count(count_to: int) -> int:
+    start = time.time()
+    counter = 0
+    while counter < count_to:
+        counter = counter + 1
+    end = time.time()
+    print(f'Finished counting to {count_to} in {end - start}')
+    return counter
+
+
+if __name__ == "__main__":
+    with ProcessPoolExecutor() as process_pool:
+        numbers = [100000000, 1, 3, 5, 22]
+        for result in process_pool.map(count, numbers):
+            print(result)
+```
+
+<div dir="rtl" style="font-size:18px">
+در کد بالا ما یک لیست از ورودی های تابع میدیم و با استفاده از تابع map میگیم به صورت multiprocess اجرا کنه
+</div>
+
+```
+Finished counting to 1 in 5.7220458984375e-06
+Finished counting to 3 in 8.344650268554688e-06
+Finished counting to 5 in 6.4373016357421875e-06
+Finished counting to 22 in 7.3909759521484375e-06
+Finished counting to 100000000 in 3.3467905521392822
+100000000
+1
+3
+5
+22
+```
+
+<div dir="rtl" style="font-size:30px; color:orangered">
+6.3.2-Process pool executors with the asyncio event loop
+</div>
+
+
+<div dir="rtl" style="font-size:18px">
+ترکیب multiprocess با asyncio:
+</div>
+
+<div dir="rtl" style="font-size:18px">
+با استفاده از تابع run_in_executor میتوانیم در multiprocess از async استفاده کنیم که در این صورت میتوانیم هر پروسس رو به صورت همروند اجرا کنیم.
+</div>
+
+```python
+import asyncio
+from asyncio.events import AbstractEventLoop
+from concurrent.futures import ProcessPoolExecutor
+from functools import partial
+from typing import List
+
+
+def count(count_to: int) -> int:
+    counter = 0
+    while counter < count_to:
+        counter = counter + 1
+    return counter
+
+
+async def main():
+    with ProcessPoolExecutor() as process_pool:
+        loop: AbstractEventLoop = asyncio.get_running_loop()
+        nums = [1, 3, 5, 22, 100000000]
+        calls: List[partial[int]] = [partial(count, num) for num in nums]
+        call_coros = []
+        for call in calls:
+            call_coros.append(loop.run_in_executor(process_pool, call))
+        results = await asyncio.gather(*call_coros)
+
+        for result in results:
+            print(result)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+
+<div dir="rtl" style="font-size:30px; color:orangered">
+6.4-Solving a problem with MapReduce using asyncio
+</div>
+
+
+<div dir="rtl" style="font-size:18px">
+استفاده از map reduce برای بهتر کردن پردازش موازی. این الگوریتم برای داده های زیاد مناسبه چون داده هارو به چند بخش کوچیک تقسیمم میکنه.
+</div>
+
+<img src="pic/img_8.png">
+
+<div dir="rtl" style="font-size:18px">
+این نمونه کد با mapreduce هست.
+</div>
+
+```python
+import functools
+from typing import Dict
+
+
+def map_frequency(text: str) -> Dict[str, int]:
+    words = text.split(' ')
+    frequencies = {}
+    for word in words:
+        if word in frequencies:
+            frequencies[word] = frequencies[word] + 1
+        else:
+            frequencies[word] = 1
+
+    return frequencies
+
+
+def merge_dictionaries(first: Dict[str, int], second: Dict[str, int]) -> Dict[str, int]:
+    merged = first
+    for key in second:
+        if key in merged:
+            merged[key] = merged[key] + second[key]
+        else:
+            merged[key] = second[key]
+
+    return merged
+
+
+lines = ["I know what I know", "I know that I know", "I don't know much", "They don't know much"]
+
+mapped_results = [map_frequency(line) for line in lines]
+for result in mapped_results:
+    print(result)
+print(functools.reduce(merge_dictionaries, mapped_results))
+```
+
+```
+{'I': 2, 'know': 2, 'what': 1}
+{'I': 2, 'know': 2, 'that': 1}
+{'I': 1, "don't": 1, 'know': 1, 'much': 1}
+{'They': 1, "don't": 1, 'know': 1, 'much': 1}
+{'I': 5, 'know': 6, 'what': 1, 'that': 1, "don't": 2, 'much': 2, 'They': 1}
+```
+
+<div dir="rtl" style="font-size:30px; color:orangered">
+6.4.3-Mapping and reducing with asyncio
+</div>
+
+
+<div dir="rtl" style="font-size:18px">
+استفاده از async برای mapreduce:
+</div>
+
+```python
+import asyncio
+import concurrent.futures
+import functools
+import time
+from typing import Dict, List
+
+
+def partition(data: List, chunk_size: int) -> List:
+    for i in range(0, len(data), chunk_size):
+        yield data[i:i + chunk_size]
+
+
+def map_frequencies(chunk: List[str]) -> Dict[str, int]:
+    counter = {}
+    for line in chunk:
+        word, _, count, _ = line.split('\t')
+        if counter.get(word):
+            counter[word] = counter[word] + int(count)
+        else:
+            counter[word] = int(count)
+    return counter
+
+
+def merge_dictionaries(first: Dict[str, int], second: Dict[str, int]) -> Dict[str, int]:
+    merged = first
+    for key in second:
+        if key in merged:
+            merged[key] = merged[key] + second[key]
+        else:
+            merged[key] = second[key]
+    return merged
+
+
+async def main(partition_size: int):
+    with open('googlebooks-eng-all-1gram-20120701-a', encoding='utf-8') as f:
+        contents = f.readlines()
+        loop = asyncio.get_running_loop()
+        tasks = []
+        start = time.time()
+        with concurrent.futures.ProcessPoolExecutor() as pool:
+            for chunk in partition(contents, partition_size):
+                tasks.append(loop.run_in_executor(pool,
+                                                  functools.partial(map_frequencies, chunk)))
+
+            intermediate_results = await asyncio.gather(*tasks)
+            final_result = functools.reduce(merge_dictionaries,
+                                            intermediate_results)
+            print(f"Aardvark has appeared {final_result['Aardvark']} times.")
+            end = time.time()
+            print(f'MapReduce took: {(end - start):.4f} seconds')
+
+
+if __name__ == "__main__":
+    asyncio.run(main(partition_size=60000))
+```
+
+

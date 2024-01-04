@@ -9,10 +9,10 @@
 
 الگوی Prototype به ما این امکان رو میده تا با Clone (کپی) کردن از نمونه‌های موجود، نمونه‌های جدیدی بسازیم.
 
-
 چه زمانی از الگوی Prototype استفاده کنیم؟
 
-از این الگو زمانی استفاده می‌کنیم که می‌خوایم یک Clone (کپی) از یک نمونه داشته باشیم. اما ساختن نمونه با کلمه کلیدی new هزینه‌های زیادی داره
+از این الگو زمانی استفاده می‌کنیم که می‌خوایم یک Clone (کپی) از یک نمونه داشته باشیم. اما ساختن نمونه با کلمه کلیدی new
+هزینه‌های زیادی داره
 
 </div>
 
@@ -47,12 +47,13 @@ class SomeComponent:
 ```python
 import copy
 
+
 class SomeComponent:
     def __init__(self, some_int, some_list_of_objects, some_circular_ref):
         self.some_int = some_int
         self.some_list_of_objects = some_list_of_objects
         self.some_circular_ref = some_circular_ref
-    
+
     def __copy__(self):
         some_list_of_objects = copy.copy(self.some_list_of_objects)
         some_circular_ref = copy.copy(self.some_circular_ref)
@@ -69,7 +70,7 @@ class SomeComponent:
             self.some_int, some_list_of_objects, some_circular_ref
         )
         new.__dict__ = copy.deepcopy(self.__dict__, memo)
-    
+
         return new
 ```
 
@@ -80,5 +81,12 @@ class SomeComponent:
 <div dir="rtl" style="font-size:18px">
 توی Shadow Copy، یک متغیر ساخته می‌شود و به مکانی توی حافظه، که مقدار متغیر قبلی توش قرار گرفته، اشاره می‌کنه. پس اگر شما مقدار متغیر اول رو تغییر بدین، متغیر دوم هم تغییر می‌کنه. و همین‌طور اگر مقدار متغیر دوم رو تغییر بدین، مقدار متغیر اول هم تغییر می‌کنه.
 
-ولی توی deep copy، یک متغیر ساخته می‌شه و مقدار متغیر قبلی توی اون کپی می‌شه. در نتیجه تغییر ابجکت اول یا ابجکت کپی تغییری توی اون یکی به وجود نمیاره.
+ولی توی deep copy، یک متغیر ساخته می‌شه و مقدار متغیر قبلی توی اون کپی می‌شه. در نتیجه تغییر ابجکت اول یا ابجکت کپی
+تغییری توی اون یکی به وجود نمیاره.
 </div>
+
+
+<div dir="rtl" style="font-size:18px">
+به طور کلی استفاده از این الگو میتونه کنترل بیشتری برای کپی آبجکت ها در اختیار ما بزاره ولی پکیج copy در پایتون اغلب اینطور نیست.
+</div>
+
