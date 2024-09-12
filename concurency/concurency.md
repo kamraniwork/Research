@@ -1530,6 +1530,196 @@ async def main():
 asyncio.run(main())
 ```
 
+<div dir="rtl" style="font-size:18px">
+توی این حالت در ۲ ثانیه اگه تسکی دان نشده باشه همه تسک هارو به عنوان pending برمیگردونه.
+</div>
+
+<br/>
+
+<div dir="rtl" style="font-size:30px; color:orangered">
+5-Introduction
+</div>
+
+
+<div dir="rtl" style="font-size:18px">
+همونطور که برای درخواست رکوئست نیاز داشتیم به کتابخونه aiohttp برای وصل شدن به دیتابیس هاهم نیاز داریم به کتابخونه مربوطه که async رو بلاک نمیکنه متصل بشیم
+</div>
+
+
+```python
+import asyncpg
+import asyncio
+
+CREATE_DATABASE = "CREATE DATABASE products;"
+
+CREATE_BRAND_TABLE = \
+    """
+    CREATE TABLE IF NOT EXISTS brand(
+    brand_id SERIAL PRIMARY KEY,
+    brand_name TEXT NOT NULL
+    );"""
+
+CREATE_PRODUCT_TABLE = \
+    """
+    CREATE TABLE IF NOT EXISTS product(
+    product_id SERIAL PRIMARY KEY,
+    product_name TEXT NOT NULL,
+    brand_id INT NOT NULL,
+    FOREIGN KEY (brand_id) REFERENCES brand(brand_id)
+    );"""
+
+CREATE_PRODUCT_COLOR_TABLE = \
+    """
+    CREATE TABLE IF NOT EXISTS product_color(
+    product_color_id SERIAL PRIMARY KEY,
+    product_color_name TEXT NOT NULL
+    );"""
+
+CREATE_PRODUCT_SIZE_TABLE = \
+    """
+    CREATE TABLE IF NOT EXISTS product_size(
+    product_size_id SERIAL PRIMARY KEY,
+    product_size_name TEXT NOT NULL
+);"""
+
+CREATE_SKU_TABLE = \
+    """
+    CREATE TABLE IF NOT EXISTS sku(
+    sku_id SERIAL PRIMARY KEY,
+    product_id INT NOT NULL,
+    product_size_id INT NOT NULL,
+    product_color_id INT NOT NULL,
+    FOREIGN KEY (product_id)
+    REFERENCES product(product_id),
+    FOREIGN KEY (product_size_id)
+    REFERENCES product_size(product_size_id),
+    FOREIGN KEY (product_color_id)
+    REFERENCES product_color(product_color_id)
+    );"""
+
+COLOR_INSERT = \
+    """
+    INSERT INTO product_color VALUES(1, 'Blue');
+    INSERT INTO product_color VALUES(2, 'Black');
+    """
+
+SIZE_INSERT = \
+    """
+    INSERT INTO product_size VALUES(1, 'Small');
+    INSERT INTO product_size VALUES(2, 'Medium');
+    INSERT INTO product_size VALUES(3, 'Large');
+    """
+
+
+async def main():
+    connection = await asyncpg.connect(host='127.0.0.1',
+                                       port=5432,
+                                       user='myuser',
+                                       database='mydatabase',
+                                       password='mypassword')
+    statements = [CREATE_BRAND_TABLE,
+                  CREATE_PRODUCT_TABLE,
+                  CREATE_PRODUCT_COLOR_TABLE,
+                  CREATE_PRODUCT_SIZE_TABLE,
+                  CREATE_SKU_TABLE,
+                  SIZE_INSERT,
+                  COLOR_INSERT]
+
+    print('Creating the product database...')
+    for statement in statements:
+        status = await connection.execute(statement)
+        print(status)
+
+    print('Finished creating the product database!')
+    await connection.close()
+
+
+asyncio.run(main())
+```
+
+<div dir="rtl" style="font-size:18px">
+برای دیتابیس اگه دو تا کوئری رو بخوایم همزمان اجرا کنیم خطا میده و میگه که بایک کانکشن نمیتونیم دو تا کوئری همزمان بزنیم.
+</div>
+
+```python
+import asyncio
+import asyncpg
+
+
+async def main():
+    connection = await asyncpg.connect(host='127.0.0.1',
+                                        port=5432,
+                                        user='postgres',
+                                        database='products',
+                                        password='password',
+                                       )
+    print('Creating the product database...')
+    queries = [connection.execute(product_query),
+    connection.execute(product_query)]
+    results = await asyncio.gather(*queries)
+```
+
+
+<div dir="rtl" style="font-size:18px">
+این خطا رو مواجه میشیم:
+</div>
+
+
+```
+RuntimeError: readexactly() called while another coroutine is already waiting
+for incoming data
+```
+
+<div dir="rtl" style="font-size:18px">
+اما راهکار چیه؟ باید چیکار کرد؟
+جواب استفاده از چندین کانکشن یا به اصطاح connection pool
+</div>
+
+![img.png](img.png)
+
+```python
+import asyncio
+import asyncpg
+
+
+product_query = \
+"""
+SELECT
+p.product_id,
+p.product_name,
+p.brand_id,
+s.sku_id,
+pc.product_color_name,
+ps.product_size_name
+FROM product as p
+JOIN sku as s on s.product_id = p.product_id
+JOIN product_color as pc on pc.product_color_id = s.product_color_id
+JOIN product_size as ps on ps.product_size_id = s.product_size_id
+WHERE p.product_id = 100"""
+
+
+async def query_product(pool):
+    async with pool.acquire() as connection:
+        return await connection.fetchrow(product_query)
+    
+async def main():
+    async with asyncpg.create_pool(host='127.0.0.1',
+                                    port=5432,
+                                    user='postgres',
+                                    password='password',
+                                    database='products',
+                                    min_size=6,
+                                    max_size=6) as pool:
+        await asyncio.gather(query_product(pool),
+                                query_product(pool))
+
+asyncio.run(main())
+```
+
+<div dir="rtl" style="font-size:18px">
+این اطمینان رو میده که وقتی که کانکشن باز شد بعدش بسته بشه.
+</div>
+
 
 <div dir="rtl" style="font-size:30px; color:orangered">
 6.1-Introducing the multiprocessing library

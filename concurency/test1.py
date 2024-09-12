@@ -1,56 +1,45 @@
 import asyncio
-import time
+from typing import Optional
+
+import aiohttp
+from aiohttp import ClientSession
 
 
-async def another_message() -> str:
-    print("Hello world11111111111111111!")
-    await asyncio.sleep(2)
-    print("Hello World 22222222222222222!")
-    return "Hello World 22222222222222222!"
+async def fetch_status(session: ClientSession, url: str, delay: int = 0) -> Optional[int]:
+    try:
+        ten_millis = aiohttp.ClientTimeout(total=100)
+        async with session.get(url, timeout=ten_millis) as result:
+
+            status = result.status
+            await asyncio.sleep(delay)
+            return status
+    except Exception as e:
+        print(f"Exception: {e}")
+        raise e
 
 
-async def hello_world_message() -> str:
-    print("Hello World33333333333333333")
-    await asyncio.sleep(5)
-    print("Hello World444444444444444444!")
-    return "Hello World444444444444444444!"
+async def main():
+    connector = aiohttp.TCPConnector(limit=10)
+    session_timeout = aiohttp.ClientTimeout(connect=.1)
+    async with aiohttp.ClientSession(connector=connector, timeout=session_timeout) as session:
+        pending = [
+            asyncio.create_task(fetch_status(session, 'http://httpbin.org/status/200', 1)) for _ in range(100)
+        ]
 
+        while pending:
+            done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED, timeout=2)
 
-async def main() -> None:
-    a = time.time()
-    r1 = asyncio.create_task(hello_world_message())
-    r2 = asyncio.create_task(another_message())
+            print(f'Done task count: {len(done)}')
+            print(f'Pending task count: {len(pending)}')
 
-    r3 = await r1
-    r4 = await r2
-
-    b = time.time() - a
-    print(b)
-    print(r3)
-    print(r4)
-
-
-def sanother_message() -> str:
-    print("Hello world11111111111111111!")
-    time.sleep(2)
-    return "Hello World 22222222222222222!"
-
-
-def shello_world_message() -> str:
-    print("Hello World33333333333333333")
-    time.sleep(5)
-    return "Hello World444444444444444444!"
-
-
-def main2() -> None:
-    a = time.time()
-    message = shello_world_message()
-    message2 = sanother_message()
-    b = time.time() - a
-    print(b)
-    print(message)
-    print(message2)
-
+            for done_task in done:
+                if done_task.exception() is None:
+                    result = done_task.result()
+                    if result is not None:
+                        print(result)
+                    else:
+                        print("log to elastic: No result")
+                else:
+                    print("log to elastic: Exception occurred")
 
 asyncio.run(main())
-# main2()
